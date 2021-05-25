@@ -1,6 +1,8 @@
 # AutoscalingGroup AMI ID update Lambda function
 
-Using Systems Manager - Parameter Store, CloudWatch Event and Lambda function to update AMI ID of Autoscaling Groups
+Using Systems Manager - Parameter Store, CloudWatch Event and AWS Lambda function to update AMI ID of Autoscaling Groups.
+
+Target Autoscaling Groups are *Autoscaling Groups which deployed with AWS CodeDeploy - Blue/Green deployment style only.*
 
 
 ## Prerequisites
