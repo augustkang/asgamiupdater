@@ -41,9 +41,7 @@ func getApplicationNames(cfg aws.Config) (appNames []string) {
 			log.Println(err.Error())
 			os.Exit(0)
 		}
-		for _, name := range output.Applications {
-			applicationNames = append(applicationNames, name)
-		}
+		applicationNames = append(applicationNames, output.Applications...)
 	}
 
 	fmt.Printf("Gathered CodeDeploy application names as :\n%v", applicationNames)
@@ -119,7 +117,7 @@ func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScal
 			LaunchTemplateData: &ec2Types.RequestLaunchTemplateData{
 				ImageId: aws.String(*imageId),
 			},
-			DryRun:           aws.Bool(false), // if set this false, it will create launchtemplateversion
+			DryRun:           aws.Bool(true), // if set this false, it will create launchtemplateversion
 			LaunchTemplateId: launchTemplateId,
 			SourceVersion:    aws.String("$Latest"),
 		}
@@ -188,9 +186,7 @@ func handleRequest(ctx context.Context, event events.CloudWatchEvent) {
 		os.Exit(0)
 	}
 
-	var applicationNames []string
-
-	applicationNames = getApplicationNames(cfg)
+	var applicationNames []string = getApplicationNames(cfg)
 
 	autoScalingGroups := getAutoScalingGroups(cfg, applicationNames)
 
