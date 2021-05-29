@@ -19,6 +19,8 @@ autoscaling:DescribeAutoscalingGroups
 
 ec2:CreateLaunchTemplateVersion
 
+ec2:DescribeImages
+
 ssm:GetParameter
 
 ## Requirements
