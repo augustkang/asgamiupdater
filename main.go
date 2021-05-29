@@ -108,30 +108,77 @@ func getAutoScalingGroups(cfg aws.Config, applicationNames []string) (asgs []asg
 }
 
 // modifyLaunchTemplates updates launch template version of Autoscaling Groups to use new AMI
-func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScalingGroup, imageId *string) bool {
-	var result bool = false
+func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScalingGroup, imageId *string) {
+
 	client := ec2.NewFromConfig(cfg)
+	updated := make(map[string]bool)
+
+	// get snapshot id of ami
+	describeImagesOutput, err := client.DescribeImages(context.TODO(), &ec2.DescribeImagesInput{
+		DryRun:   aws.Bool(false),
+		ImageIds: []string{*imageId},
+	})
+	if err != nil {
+		fmt.Printf("[FAIL] describe image failed! Exiting Lambda\n\n")
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
+	snapshotId := describeImagesOutput.Images[0].BlockDeviceMappings[0].Ebs.SnapshotId
+
 	for _, autoscalingGroup := range autoscalingGroups {
 		launchTemplateId := autoscalingGroup.LaunchTemplate.LaunchTemplateId
+		currentVersionLaunchTemplate, err := client.DescribeLaunchTemplateVersions(context.TODO(), &ec2.DescribeLaunchTemplateVersionsInput{
+			DryRun:           aws.Bool(false),
+			LaunchTemplateId: launchTemplateId,
+			Versions:         []string{"$Latest"},
+		})
+		if err != nil {
+			fmt.Printf("Failed to get current version launchtemplate : %s \n\nSkipping this launchtemplate\n", *launchTemplateId)
+			fmt.Println(err.Error())
+			continue
+		}
+
+		blockDeviceMappingRequest := ec2Types.LaunchTemplateBlockDeviceMappingRequest{
+			DeviceName: currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].DeviceName,
+			Ebs: &ec2Types.LaunchTemplateEbsBlockDeviceRequest{
+				DeleteOnTermination: currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.DeleteOnTermination,
+				Encrypted:           currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.Encrypted,
+				Iops:                currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.Iops,
+				SnapshotId:          snapshotId,
+				Throughput:          currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.Throughput,
+				VolumeSize:          currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.VolumeSize,
+				VolumeType:          currentVersionLaunchTemplate.LaunchTemplateVersions[0].LaunchTemplateData.BlockDeviceMappings[0].Ebs.VolumeType,
+			},
+		}
+
 		createLaunchTemplateVersionInput := ec2.CreateLaunchTemplateVersionInput{
 			LaunchTemplateData: &ec2Types.RequestLaunchTemplateData{
-				ImageId: aws.String(*imageId),
+				ImageId:             aws.String(*imageId),
+				BlockDeviceMappings: []ec2Types.LaunchTemplateBlockDeviceMappingRequest{blockDeviceMappingRequest},
 			},
 			DryRun:           aws.Bool(true), // if set this false, it will create launchtemplateversion
 			LaunchTemplateId: launchTemplateId,
 			SourceVersion:    aws.String("$Latest"),
 		}
-		_, err := client.CreateLaunchTemplateVersion(context.TODO(), &createLaunchTemplateVersionInput)
-		if err != nil {
-			fmt.Printf("[FAIL] ASG : %s launch template not updated\n", *autoscalingGroup.AutoScalingGroupName)
-			log.Println(err.Error())
-			os.Exit(0)
+
+		// Some ASGs use same launchtemplate. If they both create launch template version, that launch template will experience redundant version update
+		// In order to avoid duplicated updates, check whether that launchtemplate has already updated or not
+		if _, present := updated[*launchTemplateId]; !present {
+			_, err := client.CreateLaunchTemplateVersion(context.TODO(), &createLaunchTemplateVersionInput)
+			if err != nil {
+				fmt.Printf("[FAIL] ASG : %s launch template not updated\n\n", *autoscalingGroup.AutoScalingGroupName)
+				log.Println(err.Error())
+			} else {
+				updated[*launchTemplateId] = true
+				fmt.Printf("[SUCCESS] ASG : %s launch template updated\n\n", *autoscalingGroup.AutoScalingGroupName)
+				fmt.Printf("Updated LaunchTemplate : %s\n\n", *launchTemplateId)
+			}
 		} else {
-			fmt.Printf("[SUCCESS] ASG : %s launch template updated\n", *autoscalingGroup.AutoScalingGroupName)
+			fmt.Printf("Skipping ASG %s launchtemplate update - updated before update : %s", *autoscalingGroup.AutoScalingGroupName, *launchTemplateId)
 		}
 	}
-	result = true
-	return result
+
 }
 
 // getImageIdFromParameterKey gets AMI id value from Systems manager - Parameter store
@@ -191,12 +238,7 @@ func handleRequest(ctx context.Context, event events.CloudWatchEvent) {
 	autoScalingGroups := getAutoScalingGroups(cfg, applicationNames)
 
 	imageId := getImageIdFromParameterKey(cfg, eventDetail.Name)
-	result := modifyLaunchTemplates(cfg, autoScalingGroups, imageId)
-	if result {
-		fmt.Println("Launchtemplate ImageId Successfully updated")
-	} else {
-		fmt.Println("Imageid not updated")
-	}
+	modifyLaunchTemplates(cfg, autoScalingGroups, imageId)
 
 }
 
