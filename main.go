@@ -197,8 +197,8 @@ func getImageIdFromParameterKey(cfg aws.Config, parameterKey string) (imageId *s
 // Event pattern
 // {
 //     "dataType": "aws:ec2:image",
-//     "name": "test-ami-parameter",
-//     "description": "parameter store test ami",
+//     "name": "GoldenAMI",
+//     "description": "Golden AMI Parameter Update Event",
 //     "type": "String",
 //     "operation": "Update"
 // }

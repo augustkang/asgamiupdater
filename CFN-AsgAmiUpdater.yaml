@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AmiID:
+    Type: String
+    Description: "Enter Golden AMI ID"
+    # Regex to allow ami id pattern only. limit: can't validate wrong ami id but Parameter Store will do.
+    # Parameter Store validates AMI ID type parameter. See https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html#parameter-ami-validation
+    AllowedPattern: "^ami\\-[a-z0-9]+$"
+
+Resources:
+  GoldenAmiParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: GoldenAMI
+      Type: String
+      Value: !Ref AmiID
+      DataType: aws:ec2:image
+  
+  GoldenAmiParameterUpdateEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Golden AMI Parameter Update Event"
+      Name: "GoldenAmiParameterUpdateEvent"
+      State: ENABLED
+      EventPattern:
+        source:
+        - "aws.ssm"
+        detail-type:
+        - "Parameter Store Change"
+        detail:
+          name:
+          - !Ref GoldenAmiParameter
+          operation:
+          - "Update"
+      Targets:
+        - Arn: !GetAtt AsgAmiUpdaterLambdaFunction.Arn
+          Id: AsgAmiUpdater
+  
+  AsgAmiUpdaterLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref AsgAmiUpdaterLambdaFunction
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt GoldenAmiParameterUpdateEvent.Arn
+
+  AsgAmiUpdaterLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AsgAmiUpdaterLambdaRole
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: AsgAmiUpdaterLambdaPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:ap-northeast-2:YOUR-ACCOUNT:*
+          - Effect: Allow
+            Action:
+            - codedeploy:ListDeploymentGroups
+            - codedeploy:GetDeploymentGroup
+            - ec2:CreateLaunchTemplateVersion
+            Resource:
+            - arn:aws:ec2:ap-northeast-2:YOUR-ACCOUNT:launch-template/*
+            - arn:aws:codedeploy:ap-northeast-2:YOUR-ACCOUNT:application:*
+            - arn:aws:codedeploy:ap-northeast-2:YOUR-ACCOUNT:deploymentgroup:*/*
+          - Effect: Allow
+            Action:
+            - ssm:GetParameter
+            Resource:
+            - !Join ["", [arn:aws:ssm:ap-northeast-2:YOUR-ACCOUNT:parameter/,!Ref GoldenAmiParameter]]
+          - Effect: Allow
+            Action:
+            - autoscaling:DescribeAutoscalingGroups
+            - codedeploy:ListApplications
+            - ec2:DescribeLaunchTemplateVersions
+            Resource: "*"
+
+  AsgAmiUpdaterLambdaLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/AsgAmiUpdater
+        RetentionInDays: 365
+  
+  AsgAmiUpdaterLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: AsgAmiUpdater
+      Code:
+        S3Bucket: "BUCKET-NAME"
+        S3Key: "AsgAmiUpdater.zip"
+      Handler: asgamiupdater
+      Runtime: go1.x
+      Timeout: 180
+      Role: !GetAtt AsgAmiUpdaterLambdaRole.Arn

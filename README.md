@@ -40,7 +40,7 @@ Event pattern should be as belows:
   ],
   "detail": {
     "name": [
-      "test-ami-parameter"
+      "GoldenAMI"
     ],
     "operation": [
       "Update"
@@ -51,7 +51,7 @@ Event pattern should be as belows:
 
 2. Create a Parameter in AWS Systems Manager - Parameter Store
 
-Create parameter something like Key : My-Ami, Value : ami-12345678
+Create parameter something like Key : GoldenAMI, Value : ami-12345678
 
 Type : String, Data type : aws:ec2:image
 
