@@ -38,13 +38,12 @@ func getApplicationNames(cfg aws.Config) (appNames []string) {
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(context.TODO())
 		if err != nil {
+			fmt.Printf("[ERROR] Failed to get paginator.NextPage output in getApplicationNames")
 			log.Println(err.Error())
 			os.Exit(0)
 		}
 		applicationNames = append(applicationNames, output.Applications...)
 	}
-
-	fmt.Printf("Gathered CodeDeploy application names as :\n%v", applicationNames)
 
 	return applicationNames
 }
@@ -76,9 +75,9 @@ func getAutoScalingGroups(cfg aws.Config, applicationNames []string) (asgs []asg
 			}
 			if deploymentGroupOutput.DeploymentGroupInfo.ComputePlatform == codedeployTypes.ComputePlatformServer && deploymentGroupOutput.DeploymentGroupInfo.DeploymentStyle.DeploymentType == codedeployTypes.DeploymentTypeBlueGreen {
 				if len(deploymentGroupOutput.DeploymentGroupInfo.AutoScalingGroups) == 0 {
-					fmt.Printf("This deployment group has no AutoscalinGroups\n")
-					fmt.Printf("Application Name : %s, DeploymentGroup name : %s\n", applicationName, deploymentGroupName)
-					fmt.Printf("Skipping this DeploymentGroup\n")
+					fmt.Printf("[INFO] This deployment group has no AutoscalinGroups\n")
+					fmt.Printf("[INFO] Application Name : %s, DeploymentGroup name : %s\n", applicationName, deploymentGroupName)
+					fmt.Printf("[INFO] Skipping this DeploymentGroup\n")
 					continue
 				} else {
 					var asgNameList []string
@@ -88,8 +87,9 @@ func getAutoScalingGroups(cfg aws.Config, applicationNames []string) (asgs []asg
 						AutoScalingGroupNames: asgNameList,
 					})
 					if err != nil {
-						log.Println("Getting AutoscalingGroup Output gone wrong. Close function")
-						os.Exit(0)
+						log.Printf("[ERROR] DescribeAutoscalingGroups failed!! - ASG : %s, App : %s, DeploymentGroup : %s\n\n", asgNameList[0], applicationName, *deploymentGroupOutput.DeploymentGroupInfo.DeploymentGroupName)
+						fmt.Println(err.Error())
+						continue
 					}
 					autoscalingGroups = append(autoscalingGroups, output.AutoScalingGroups...)
 				}
@@ -97,10 +97,10 @@ func getAutoScalingGroups(cfg aws.Config, applicationNames []string) (asgs []asg
 		}
 	}
 	if len(autoscalingGroups) == 0 {
-		fmt.Printf("There's no target ASGs. Exit function\n")
+		fmt.Printf("[ERROR] There's no target ASGs. Exit function\n")
 		os.Exit(0)
 	}
-	fmt.Printf("Target AutoscalingGroup names as belows : \n")
+	fmt.Printf("[INFO] Target AutoscalingGroup names as belows : \n")
 	for _, autoscalingGroup := range autoscalingGroups {
 		fmt.Printf("%s ", *autoscalingGroup.AutoScalingGroupName)
 	}
@@ -119,7 +119,7 @@ func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScal
 		ImageIds: []string{*imageId},
 	})
 	if err != nil {
-		fmt.Printf("[FAIL] describe image failed! Exiting Lambda\n\n")
+		fmt.Printf("[FAIL] describe image failed! Exit Lambda\n\n")
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
@@ -134,7 +134,7 @@ func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScal
 			Versions:         []string{"$Latest"},
 		})
 		if err != nil {
-			fmt.Printf("Failed to get current version launchtemplate : %s \n\nSkipping this launchtemplate\n", *launchTemplateId)
+			fmt.Printf("[ERROR] Failed to get current version launchtemplate : %s \n\nSkipping this launchtemplate\n", *launchTemplateId)
 			fmt.Println(err.Error())
 			continue
 		}
@@ -171,11 +171,11 @@ func modifyLaunchTemplates(cfg aws.Config, autoscalingGroups []asgTypes.AutoScal
 				log.Println(err.Error())
 			} else {
 				updated[*launchTemplateId] = true
-				fmt.Printf("[SUCCESS] ASG : %s launch template updated\n\n", *autoscalingGroup.AutoScalingGroupName)
-				fmt.Printf("Updated LaunchTemplate : %s\n\n", *launchTemplateId)
+				fmt.Printf("[SUCCESS] ASG : %s - launch template updated\n\n", *autoscalingGroup.AutoScalingGroupName)
+				fmt.Printf("[SUCCESS] Updated LaunchTemplate ID : %s\n\n", *launchTemplateId)
 			}
 		} else {
-			fmt.Printf("Skipping ASG %s launchtemplate update - updated before update : %s", *autoscalingGroup.AutoScalingGroupName, *launchTemplateId)
+			fmt.Printf("[INFO] Skipping ASG %s launchtemplate update - updated before update : %s", *autoscalingGroup.AutoScalingGroupName, *launchTemplateId)
 		}
 	}
 
@@ -188,7 +188,9 @@ func getImageIdFromParameterKey(cfg aws.Config, parameterKey string) (imageId *s
 		Name: aws.String(parameterKey),
 	})
 	if err != nil {
+		fmt.Printf("[ERROR] Failed to getParameter from Parameter Store. Exit function.")
 		log.Println(err.Error())
+		os.Exit(0)
 	}
 	return getParameterOutput.Parameter.Value
 
@@ -212,16 +214,17 @@ func handleRequest(ctx context.Context, event events.CloudWatchEvent) {
 	fmt.Printf("Event Resources : %v\n", event.Resources)
 
 	eventDetail := EventDetail{}
-	fmt.Println("Parameter name is as belows")
+	fmt.Println("[INFO] Updated parameter name is as belows")
 
 	err := json.Unmarshal(event.Detail, &eventDetail)
 	if err != nil {
-		fmt.Println("Failed to unmarshal Event Detail")
+		fmt.Println("[ERROR] Failed to unmarshal Event Detail")
+		log.Println(err.Error())
 		os.Exit(0)
 	}
 
 	if eventDetail.DataType != "aws:ec2:image" {
-		fmt.Println("FATAL : This event is not created by aws:ec2:image type Parameter")
+		fmt.Println("[ERROR] This event is not created by aws:ec2:image type Parameter")
 		os.Exit(0)
 	}
 
@@ -229,7 +232,8 @@ func handleRequest(ctx context.Context, event events.CloudWatchEvent) {
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		fmt.Println("Config loading failed")
+		fmt.Println("[ERROR] Config loading failed")
+		log.Println(err.Error())
 		os.Exit(0)
 	}
 

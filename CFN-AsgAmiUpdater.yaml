@@ -88,6 +88,7 @@ Resources:
             - autoscaling:DescribeAutoscalingGroups
             - codedeploy:ListApplications
             - ec2:DescribeLaunchTemplateVersions
+            - ec2:DescribeImages
             Resource: "*"
 
   AsgAmiUpdaterLambdaLogGroup:
