@@ -19,8 +19,8 @@ github.com/aws/aws-sdk-go-v2/service/ec2 v1.17.0 h1:oSLeDbLlmmNtLYLhSAyffMIfVVAv
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.17.0/go.mod h1:d8R2f1hFcknkA3MW4SeExwEua2KpR+dhSrwWlnlwe5Q=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.3.1 h1:APEjhKZLFlNVLATnA/TJyA+w1r/xd5r5ACWBDZ9aIvc=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.3.1/go.mod h1:Ve+eJOx9UWaT/lMVebnFhDhO49fSLVedHoA82+Rqme0=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.10.1 h1:/bps7fo0AvaedIoTLONXJNDKpZ66zlHPqeiVqJ2lMeM=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.10.1/go.mod h1:HGaW9DlBrfT6x9HUNqAX8vM3QXtYtYn0LqEkyg2rXbY=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.11.0 h1:cSUDTTel5gWmQMzskM2d9VnxZ6z2lfmoQLMCQDEkcUU=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.11.0/go.mod h1:HGaW9DlBrfT6x9HUNqAX8vM3QXtYtYn0LqEkyg2rXbY=
 github.com/aws/aws-sdk-go-v2/service/sso v1.4.1 h1:RfgQyv3bFT2Js6XokcrNtTjQ6wAVBRpoCgTFsypihHA=
 github.com/aws/aws-sdk-go-v2/service/sso v1.4.1/go.mod h1:ycPdbJZlM0BLhuBnd80WX9PucWPG88qps/2jl9HugXs=
 github.com/aws/aws-sdk-go-v2/service/sts v1.7.1 h1:7ce9ugapSgBapwLhg7AJTqKW5U92VRX3vX65k2tsB+g=
