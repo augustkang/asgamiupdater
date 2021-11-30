@@ -22,8 +22,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscaling v1.16.0 h1:mea/1B2jqDCOunM5+2qi
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.16.0/go.mod h1:EPlSbbR4xaua65TZ3/XjFPCsSYXwGZGI+5tWRaAdPis=
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.9.1 h1:DyItbhPtyUe1HWEbXhNpgGvS24WLr2fl746x1HUkiPA=
 github.com/aws/aws-sdk-go-v2/service/codedeploy v1.9.1/go.mod h1:4WhtfjiNlG1wM+eNF49udwnFauR0cRP3JsalA+Jgack=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.23.0 h1:ZZiG7Hol3Zjb7rGStw4QUuj4MAHBSdZjnt3D7+csgS8=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.23.0/go.mod h1:Xv0jfvBUvJMRnYA5sX+VisekFtkWzD68qTW1VkvcrIo=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.24.0 h1:nWIMIJdgSsYCH6SrX9RYNHaxc5ermN4F7PDS2iMbgkY=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.24.0/go.mod h1:Xv0jfvBUvJMRnYA5sX+VisekFtkWzD68qTW1VkvcrIo=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.0/go.mod h1:Mq6AEc+oEjCUlBuLiK5YwW4shSOAKCQ3tXN0sQeYoBA=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.1 h1:ZFSfgetO5kf4WXy+a2B8zug6DXGUYjsWacyvwx5cgXU=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.1/go.mod h1:fEaHB2bi+wVZw4uKMHEXTL9LwtT4EL//DOhTeflqIVo=
