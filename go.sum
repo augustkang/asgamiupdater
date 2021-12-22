@@ -17,8 +17,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.3.2 h1:IQup8Q6lorXeiA/rK72PeToWoWK8
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.2/go.mod h1:VITe/MdW6EMXPb0o0txu/fsonXbMHUU2OC2Qp7ivU4o=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.17.0 h1:iz4eD08AcsaijfGyZpBSn62L2HcjAuC33cwtS0F8twk=
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.17.0/go.mod h1:Wu0SF1d/ibUOY3Nu3iHQaPufB4SM2XkgQP64sd7r888=
-github.com/aws/aws-sdk-go-v2/service/codedeploy v1.9.2 h1:y77Dr3UXDk61+V78uyWkdDGCSLL0FykB5rWs68o6qJc=
-github.com/aws/aws-sdk-go-v2/service/codedeploy v1.9.2/go.mod h1:kxyx444+kXTV0yi8BxwIJoD9wd4zwOwQj0NQwUvoioQ=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.10.0 h1:2KLXwuQlVXphx5YOtsH/7+ZH0wv+v7FAYTfQ41LZZnk=
+github.com/aws/aws-sdk-go-v2/service/codedeploy v1.10.0/go.mod h1:kxyx444+kXTV0yi8BxwIJoD9wd4zwOwQj0NQwUvoioQ=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.26.0 h1:Q++veaxis1Dg7is9yi+aEPsIBRAgdkUxoIvyud7jOyo=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.26.0/go.mod h1:cIbz+b70nxJafXf9lT07Xj03pef6CsVdYTCCR0DQEQc=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.5.2 h1:CKdUNKmuilw/KNmO2Q53Av8u+ZyXMC2M9aX8Z+c/gzg=
