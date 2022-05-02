@@ -9,5 +9,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.37.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.26.0
 )
